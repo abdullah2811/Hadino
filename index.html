@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rural Runner</title>
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Rural Runner</title>
+        <link rel="stylesheet" href="style.css">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    </head>
+
+<body>
+
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="ui-layer">
+            <div id="score-board" class="hidden">
+                <span>Score: <span id="current-score">0</span></span>
+                <span>High Score: <span id="high-score">0</span></span>
+            </div>
+
+            <!-- Login Overlay -->
+            <div id="login-overlay">
+                <div class="glass-panel">
+                    <h1>Rural Runner</h1>
+                    <div class="auth-tabs">
+                        <button id="tab-login" class="tab-btn active">Login</button>
+                        <button id="tab-register" class="tab-btn">Register</button>
+                    </div>
+                    <div id="auth-form">
+                        <input type="text" id="userid-input" placeholder="User ID (e.g. player123)" maxlength="20">
+                        <input type="text" id="username-input" placeholder="Display Name" maxlength="15" class="hidden">
+                        <button id="auth-action-btn">Login & Play</button>
+                        <p id="auth-message"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Menu Overlay -->
+            <div id="main-menu-overlay" class="hidden">
+                <div class="glass-panel">
+                    <h1>Rural Runner</h1>
+                    <p>Welcome, <span id="menu-username">Runner</span>!</p>
+                    <button id="menu-play-btn">Play Game</button>
+                    <button id="menu-leaderboard-btn">Leaderboard</button>
+                    <button id="menu-settings-btn">Settings</button>
+                </div>
+            </div>
+
+            <!-- Leaderboard Overlay -->
+            <div id="leaderboard-overlay" class="hidden">
+                <div class="glass-panel">
+                    <h3>Top 50 Runners</h3>
+                    <ul id="top-scores-list">
+                        <!-- Scores will be populated here -->
+                        <li>Loading scores...</li>
+                    </ul>
+                    <button id="leaderboard-back-btn" class="secondary-btn">Back</button>
+                </div>
+            </div>
+
+            <!-- Settings Overlay -->
+            <div id="settings-overlay" class="hidden">
+                <div class="glass-panel">
+                    <h2>Settings</h2>
+                    <div class="setting-item">
+                        <label for="music-toggle">Music</label>
+                        <input type="checkbox" id="music-toggle" checked>
+                    </div>
+                    <button id="logout-btn" class="danger-btn">Logout</button>
+                    <button id="settings-back-btn" class="secondary-btn">Back</button>
+                </div>
+            </div>
+
+            <!-- Game Over Overlay -->
+            <div id="game-over-overlay" class="hidden">
+                <div class="glass-panel">
+                    <h2>Game Over!</h2>
+                    <p>Score: <span id="final-score">0</span></p>
+                    <button id="restart-btn">Try Again</button>
+                    <button id="home-btn">Main Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Element -->
+    <audio id="bg-music" loop>
+        <source src="assets/music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <!-- Config and Game Script -->
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
