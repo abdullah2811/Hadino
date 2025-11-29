@@ -3,7 +3,7 @@ const ctx = canvas.getContext('2d');
 
 // Game State
 let gameRunning = false;
-let gameSpeed = 8;
+let gameSpeed = 6;
 let score = 0;
 let frameCount = 0;
 let username = '';
