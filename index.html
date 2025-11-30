@@ -5,21 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>haDino</title>
-    <!DOCTYPE html>
-    <html lang="en">
-
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>haDino</title>
-        <link rel="stylesheet" href="style.css">
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
-    </head>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+</head>
 
 <body>
 
     <div id="game-container">
         <canvas id="gameCanvas"></canvas>
+
+        <!-- Rotate Device Message (Mobile Portrait Only) -->
+        <div id="rotate-message">
+            <div class="glass-panel">
+                <h2>📱 Rotate Your Device</h2>
+                <p>Please rotate your device to landscape mode for the best gaming experience!</p>
+                <p style="font-size: 3rem; margin: 1rem 0;">🔄</p>
+            </div>
+        </div>
 
         <div id="ui-layer">
             <div id="score-board" class="hidden">
