@@ -168,6 +168,16 @@ function init() {
     if (ui.restartBtn) ui.restartBtn.addEventListener('click', resetGame);
     if (ui.homeBtn) ui.homeBtn.addEventListener('click', showMainMenu);
     if (ui.musicToggle) ui.musicToggle.addEventListener('change', updateMusicState);
+
+    // Fullscreen button for mobile
+    const fullscreenBtn = document.getElementById('enter-fullscreen-btn');
+    if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', enterFullscreen);
+    }
+
+    // Auto-enter fullscreen on orientation change to landscape (mobile only)
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener('resize', handleOrientationChange);
 }
 
 function resizeCanvas() {
@@ -533,6 +543,55 @@ async function gameOver() {
         } catch (error) {
             console.error("Error saving score:", error);
         }
+    }
+}
+
+// Fullscreen Management
+function enterFullscreen() {
+    const elem = document.documentElement;
+
+    if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(err => {
+            console.log("Fullscreen request failed:", err);
+        });
+    } else if (elem.webkitRequestFullscreen) { // Safari
+        elem.webkitRequestFullscreen();
+    } else if (elem.mozRequestFullScreen) { // Firefox
+        elem.mozRequestFullScreen();
+    } else if (elem.msRequestFullscreen) { // IE/Edge
+        elem.msRequestFullscreen();
+    }
+}
+
+function exitFullscreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+    }
+}
+
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function isLandscape() {
+    return window.innerWidth > window.innerHeight;
+}
+
+function handleOrientationChange() {
+    // Auto-enter fullscreen on mobile when in landscape
+    if (isMobileDevice() && isLandscape() && !document.fullscreenElement && !document.webkitFullscreenElement) {
+        // Small delay to ensure orientation change is complete
+        setTimeout(() => {
+            if (isLandscape()) {
+                enterFullscreen();
+            }
+        }, 300);
     }
 }
 
