@@ -111,6 +111,7 @@ const ui = {
     mainMenu: document.getElementById('main-menu-overlay'),
     leaderboard: document.getElementById('leaderboard-overlay'),
     settings: document.getElementById('settings-overlay'),
+    about: document.getElementById('about-overlay'),
     gameOver: document.getElementById('game-over-overlay'),
 
     scoreBoard: document.getElementById('score-board'),
@@ -129,10 +130,12 @@ const ui = {
     menuPlayBtn: document.getElementById('menu-play-btn'),
     menuLeaderboardBtn: document.getElementById('menu-leaderboard-btn'),
     menuSettingsBtn: document.getElementById('menu-settings-btn'),
+    menuAboutBtn: document.getElementById('menu-about-btn'),
 
     leaderboardBackBtn: document.getElementById('leaderboard-back-btn'),
     settingsBackBtn: document.getElementById('settings-back-btn'),
     logoutBtn: document.getElementById('logout-btn'),
+    aboutBackBtn: document.getElementById('about-back-btn'),
 
     musicToggle: document.getElementById('music-toggle'),
 
@@ -196,9 +199,11 @@ function setupMenuUI() {
     if (ui.menuPlayBtn) ui.menuPlayBtn.addEventListener('click', startGame);
     if (ui.menuLeaderboardBtn) ui.menuLeaderboardBtn.addEventListener('click', showLeaderboard);
     if (ui.menuSettingsBtn) ui.menuSettingsBtn.addEventListener('click', showSettings);
+    if (ui.menuAboutBtn) ui.menuAboutBtn.addEventListener('click', showAbout);
 
     if (ui.leaderboardBackBtn) ui.leaderboardBackBtn.addEventListener('click', showMainMenu);
     if (ui.settingsBackBtn) ui.settingsBackBtn.addEventListener('click', showMainMenu);
+    if (ui.aboutBackBtn) ui.aboutBackBtn.addEventListener('click', showMainMenu);
     if (ui.logoutBtn) ui.logoutBtn.addEventListener('click', logout);
 }
 
@@ -339,11 +344,17 @@ function showSettings() {
     ui.settings.classList.remove('hidden');
 }
 
+function showAbout() {
+    hideAllOverlays();
+    ui.about.classList.remove('hidden');
+}
+
 function hideAllOverlays() {
     ui.login.classList.add('hidden');
     ui.mainMenu.classList.add('hidden');
     ui.leaderboard.classList.add('hidden');
     ui.settings.classList.add('hidden');
+    if (ui.about) ui.about.classList.add('hidden');
     ui.gameOver.classList.add('hidden');
     ui.scoreBoard.classList.add('hidden');
 }

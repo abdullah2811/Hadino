@@ -81,7 +81,8 @@ canvas {
 #game-over-overlay,
 #main-menu-overlay,
 #leaderboard-overlay,
-#settings-overlay {
+#settings-overlay,
+#about-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -94,6 +95,14 @@ canvas {
     pointer-events: auto;
     backdrop-filter: blur(8px);
     z-index: 20;
+}
+
+#main-menu-overlay,
+#about-overlay,
+#leaderboard-overlay,
+#settings-overlay {
+    background: url(assets/game_background.png);
+    opacity: 0.9;
 }
 
 .glass-panel {
@@ -348,118 +357,9 @@ input[type="checkbox"] {
     background: rgba(0, 0, 0, 0.4);
 }
 
-/* Mobile Portrait Mode - Show Rotate Message */
-@media screen and (max-width: 768px) and (orientation: portrait) {
-    #rotate-message {
-        display: flex !important;
-    }
-
-    /* Blur the game content behind */
-    canvas,
-    #ui-layer {
-        filter: blur(5px);
-    }
-}
-
-/* Mobile Landscape Mode - Full Screen Optimization */
-@media screen and (max-height: 500px) and (orientation: landscape) {
-    body {
-        padding: 0;
-        margin: 0;
-        background: #000;
-    }
-
-    #game-container {
-        width: 100vw;
-        height: 100vh;
-        max-width: none;
-        max-height: none;
-        border-radius: 0;
-        box-shadow: none;
-    }
-
-    /* Compact UI for small screens */
-    h1 {
-        font-size: 1.5rem;
-        margin-bottom: 0.3rem;
-    }
-
-    h2 {
-        font-size: 1.3rem;
-        margin-bottom: 0.5rem;
-    }
-
-    h3 {
-        font-size: 1.2rem;
-        margin-bottom: 0.5rem;
-    }
-
-    p {
-        font-size: 0.9rem;
-        margin-bottom: 0.8rem;
-    }
-
-    .glass-panel {
-        padding: 1.5rem 2rem;
-        max-height: 85vh;
-        overflow-y: auto;
-        min-width: 280px;
-    }
-
-    input {
-        padding: 10px;
-        margin-bottom: 0.6rem;
-        font-size: 0.9rem;
-    }
-
-    button {
-        padding: 10px 20px;
-        font-size: 1rem;
-        margin-bottom: 0.6rem;
-    }
-
-    #score-board {
-        top: 5px;
-        right: 5px;
-        font-size: 0.9rem;
-        padding: 5px 10px;
-    }
-
-    /* Ensure leaderboard is scrollable */
-    #top-scores-list {
-        max-height: 200px;
-        font-size: 0.95rem;
-    }
-
-    #top-scores-list li {
-        padding: 8px 10px;
-        font-size: 0.95rem;
-    }
-
-    .auth-tabs {
-        margin-bottom: 1rem;
-        gap: 10px;
-    }
-
-    .tab-btn {
-        padding: 8px 20px;
-        font-size: 0.9rem;
-    }
-
-    .setting-item {
-        margin-bottom: 1.5rem;
-        font-size: 1.1rem;
-        padding: 12px;
-    }
-}
-
-/* ========================================
-   MOBILE OPTIMIZATION
-   ======================================== */
-
-/* Rotate Device Message - Hidden by default */
+/* Rotate Device Message Overlay */
 #rotate-message {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -482,6 +382,76 @@ input[type="checkbox"] {
     background: linear-gradient(135deg, #FFD54F 0%, #FFB74D 100%);
     box-shadow: 0 6px 20px rgba(255, 152, 0, 0.6);
     color: #000;
+}
+
+#about-overlay .glass-panel {
+    /* Make it Scrollable */
+    overflow-y: auto;
+    max-height: 65vh;
+    max-width: 700px;
+    width: 95%;
+}
+
+#about-overlay h1 {
+    color: var(--primary-dark);
+    margin-bottom: 1rem;
+}
+
+#about-overlay > .glass-panel > p {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+#about-overlay ul {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0;
+}
+
+#about-overlay li {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 15px;
+    border-left: 4px solid var(--primary-color);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#about-overlay li:hover {
+    transform: translateX(5px);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+}
+
+#about-overlay li img {
+    width: 80px;
+    object-fit: cover;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+#about-overlay li p {
+    margin: 0;
+    text-align: left;
+}
+
+#about-overlay li p b {
+    font-size: 1.3rem;
+    color: var(--primary-dark);
+    display: block;
+    margin-bottom: 0.3rem;
+}
+
+#about-overlay li p:not(:has(b)) {
+    font-size: 0.95rem;
+    color: #666;
+    line-height: 1.4;
 }
 
 /* Mobile Portrait Mode - Show Rotate Message */

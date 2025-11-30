@@ -59,13 +59,39 @@
                     <button id="menu-play-btn">Play Game</button>
                     <button id="menu-leaderboard-btn">Leaderboard</button>
                     <button id="menu-settings-btn">Settings</button>
+                    <button id="menu-about-btn">About Us</button>
+                </div>
+            </div>
+
+            <!-- a section for the developer introduction which will contain my picture, infos, department name, university name, social media links (fb, github, linkedin). I will also write a line saying thanks to Saad and Antigravity. -->
+            <!-- About Us Overlay -->
+            <div id="about-overlay" class="hidden">
+                <div class="glass-panel">
+                    <h1>About Us</h1>
+                    <p>Thank you for playing haDino!</p>
+                    <b>Developed by:</b>
+                    <ul>
+                        <li> <img src="assets/abdullah.png" alt="">
+                            <p><b>Abdullah</b></p>
+                            <p>I worked as the developer of this game.<br>Department of Computer Science and Engineering, MBSTU.</p>
+                        </li>
+                        <li> <img src="assets/saad.png" alt="">
+                            <p><b>Saad Khan</b></p>
+                            <p>I assisted and checked the quality of the website.<br>Department of Computer Science and Engineering, MBSTU.</p>
+                        </li>
+                        <li> <img src="assets/hadi.png" alt="">
+                            <p><b>Abdullah Al Hadi</b></p>
+                            <p>I have done nothing, just being abused here.<br>Department of Computer Science and Engineering, MBSTU.</p>
+                        </li>
+                    </ul>
+                    <button id="about-back-btn" class="secondary-btn">Back</button>
                 </div>
             </div>
 
             <!-- Leaderboard Overlay -->
             <div id="leaderboard-overlay" class="hidden">
                 <div class="glass-panel">
-                    <h3>Top 50 Runners</h3>
+                    <h3>Top 50 Runners</h3><br>
                     <ul id="top-scores-list">
                         <!-- Scores will be populated here -->
                         <li>Loading scores...</li>
@@ -97,21 +123,19 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Audio Element -->
-    <audio id="bg-music" loop>
-        <source src="assets/music.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
+        <!--  Audio Element -->
+        <audio id="bg-music" loop>
+            <source src="assets/music.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+        <!--   Firebase SDKs -->
+        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <!-- Config and Game Script -->
-    <script src="firebase-config.js"></script>
-    <script src="script.js"></script>
+        <!--    Config and Game Script -->
+        <script src="firebase-config.js"></script>
+        <script src="script.js"></script>
 </body>
-
 </html>
