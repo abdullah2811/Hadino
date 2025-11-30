@@ -3,10 +3,31 @@ const ctx = canvas.getContext('2d');
 
 // Game State
 let gameRunning = false;
+let baseGameSpeed = 6; // Base speed for mobile devices
 let gameSpeed = 6;
 let score = 0;
 let frameCount = 0;
 let username = '';
+
+// Screen size detection
+function getGameSpeedMultiplier() {
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    
+    const isLaptopScreen = screenWidth >= 1024 && screenHeight >= 600;
+    
+    if (isLaptopScreen) {
+        return 1.8; // Make it 80% faster on laptop screens
+    }
+    
+    return 1.0; // Keep original speed for mobile devices
+}
+
+function updateGameSpeed() {
+    const multiplier = getGameSpeedMultiplier();
+    baseGameSpeed = 8 * multiplier;
+    gameSpeed = baseGameSpeed;
+}
 
 // Assets
 const assets = {
@@ -187,6 +208,9 @@ function resizeCanvas() {
     const container = document.getElementById('game-container');
     canvas.width = container.clientWidth;
     canvas.height = container.clientHeight;
+    
+    // Update game speed when screen size changes
+    updateGameSpeed();
 }
 
 function setupAuthUI() {
@@ -425,7 +449,7 @@ function startGame() {
 function resetGame() {
     gameRunning = true;
     score = 0;
-    gameSpeed = 8;
+    updateGameSpeed(); // Set appropriate speed based on screen size
     obstacles = [];
     frameCount = 0;
 
