@@ -167,6 +167,8 @@ const ui = {
 
 // Audio
 const bgMusic = document.getElementById('bg-music');
+let currentMusicIndex = 0;
+let lastScoreMilestone = 0;
 
 // Auth State
 let isRegisterMode = false;
@@ -417,6 +419,23 @@ function playGameMusic() {
     bgMusic.play().catch(e => console.log("Game music play failed:", e));
 }
 
+function changeGameMusic(scoreBasedIndex) {
+    if (!ui.musicToggle.checked) {
+        console.log("Music is disabled in settings");
+        return;
+    }
+
+    // Use random selection instead of score-based index for variety
+    const randomTrackIndex = Math.floor(Math.random() * musicTracks.length);
+    const selectedTrack = musicTracks[randomTrackIndex];
+    
+    console.log(`Changing music at score ${Math.floor(score)} to random track ${randomTrackIndex + 1}: ${selectedTrack}`);
+    
+    bgMusic.src = selectedTrack;
+    bgMusic.loop = true;
+    bgMusic.play().catch(e => console.log("Music change failed:", e));
+}
+
 function stopMusic() {
     bgMusic.pause();
     bgMusic.currentTime = 0;
@@ -452,6 +471,8 @@ function resetGame() {
     updateGameSpeed(); // Set appropriate speed based on screen size
     obstacles = [];
     frameCount = 0;
+    currentMusicIndex = 0;
+    lastScoreMilestone = 0;
 
     dino.y = canvas.height - GROUND_HEIGHT - dino.height;
     dino.dy = 0;
@@ -493,6 +514,13 @@ function update() {
     gameSpeed += 0.001;
 
     ui.currentScore.textContent = Math.floor(score);
+
+    // Check for music change every 300 points
+    const currentScoreMilestone = Math.floor(score / 300);
+    if (currentScoreMilestone > lastScoreMilestone && currentScoreMilestone > 0) {
+        lastScoreMilestone = currentScoreMilestone;
+        changeGameMusic(currentScoreMilestone);
+    }
 
     dino.update();
 
