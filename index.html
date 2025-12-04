@@ -29,6 +29,9 @@
         </div>
 
         <div id="ui-layer">
+            <!-- Pause Button (Top-Left) -->
+            <button id="pause-btn" class="pause-button hidden" title="Pause Game">⏸</button>
+            
             <div id="score-board" class="hidden">
                 <span>Score: <span id="current-score">0</span></span>
                 <span>High Score: <span id="high-score">0</span></span>
@@ -121,9 +124,31 @@
             <div id="game-over-overlay" class="hidden">
                 <div class="glass-panel">
                     <h2>Game Over!</h2>
+                    <h4>দোয়া করেন যাতে গেমটি যারা বানিয়েছেন তাদের দ্রুত বিবাহ হয়ে যায়।</h4>
+                    <br>
                     <p>Score: <span id="final-score">0</span></p>
                     <button id="restart-btn">Try Again</button>
                     <button id="home-btn">Main Menu</button>
+                </div>
+            </div>
+
+            <!-- Pause Overlay -->
+            <div id="pause-overlay" class="hidden">
+                <div class="pause-content">
+                    <div class="pause-icon">⏸</div>
+                    <h1 class="pause-title">Game Paused</h1>
+                    <div id="countdown-text" class="countdown-display">3</div>
+                    <p class="pause-instructions">Take a break, you're doing great!</p>
+                    <div class="pause-buttons">
+                        <button id="resume-btn" class="resume-button">
+                            <span class="btn-icon">▶</span>
+                            <span class="btn-text">Resume</span>
+                        </button>
+                        <button id="pause-home-btn" class="pause-secondary-btn">
+                            <span class="btn-icon">🏠</span>
+                            <span class="btn-text">Main Menu</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

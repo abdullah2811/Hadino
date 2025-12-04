@@ -3,11 +3,19 @@ const ctx = canvas.getContext('2d');
 
 // Game State
 let gameRunning = false;
-let baseGameSpeed = 6; // Base speed for mobile devices
-let gameSpeed = 6;
+let gamePaused = false;
+let isCountingDown = false;
+let countdownValue = 0;
+let pausedTime = 0;
+let baseGameSpeed = 20; // Base speed in pixels per second
+let gameSpeed = 20; // Current speed in pixels per second
 let score = 0;
 let frameCount = 0;
 let username = '';
+
+// Timing variables
+let lastTime = 0;
+let deltaTime = 0;
 
 // Screen size detection
 function getGameSpeedMultiplier() {
@@ -25,7 +33,7 @@ function getGameSpeedMultiplier() {
 
 function updateGameSpeed() {
     const multiplier = getGameSpeedMultiplier();
-    baseGameSpeed = 8 * multiplier;
+    baseGameSpeed = 300 * multiplier; // 300 pixels per second base
     gameSpeed = baseGameSpeed;
 }
 
@@ -59,14 +67,14 @@ const musicTracks = [
 ];
 const menuTheme = 'assets/main_menu_theme.mp3';
 
-// Physics Constants
-const GRAVITY = 0.8;
-const JUMP_FORCE = -17;
+// Physics Constants (per second)
+const GRAVITY = 1200; // pixels per second squared
+const JUMP_FORCE = -600; // pixels per second
 const GROUND_HEIGHT = 50;
 
 // Game Objects
 const dino = {
-    x: 50,
+    x: 0, // Will be set to 40% of canvas width
     y: 0,
     width: 120,
     height: 150,
@@ -83,18 +91,21 @@ const dino = {
         }
     },
 
-    update() {
+    update(deltaTime) {
         if (keys['Space'] || keys['ArrowUp'] || keys['Click']) {
             this.jump();
         }
-        this.y += this.dy;
+        
+        // Apply velocity based on delta time
+        this.y += this.dy * deltaTime;
 
         if (this.y + this.height > canvas.height - GROUND_HEIGHT) {
             this.y = canvas.height - GROUND_HEIGHT - this.height;
             this.dy = 0;
             this.grounded = true;
         } else {
-            this.dy += GRAVITY;
+            // Apply gravity based on delta time
+            this.dy += GRAVITY * deltaTime;
             this.grounded = false;
         }
     },
@@ -162,7 +173,12 @@ const ui = {
 
     restartBtn: document.getElementById('restart-btn'),
     homeBtn: document.getElementById('home-btn'),
-    topScoresList: document.getElementById('top-scores-list')
+    topScoresList: document.getElementById('top-scores-list'),
+    pauseBtn: document.getElementById('pause-btn'),
+    pauseOverlay: document.getElementById('pause-overlay'),
+    countdownText: document.getElementById('countdown-text'),
+    resumeBtn: document.getElementById('resume-btn'),
+    pauseHomeBtn: document.getElementById('pause-home-btn')
 };
 
 // Audio
@@ -194,6 +210,9 @@ function init() {
     if (ui.restartBtn) ui.restartBtn.addEventListener('click', resetGame);
     if (ui.homeBtn) ui.homeBtn.addEventListener('click', showMainMenu);
     if (ui.musicToggle) ui.musicToggle.addEventListener('change', updateMusicState);
+    if (ui.pauseBtn) ui.pauseBtn.addEventListener('click', togglePause);
+    if (ui.resumeBtn) ui.resumeBtn.addEventListener('click', resumeGameWithCountdown);
+    if (ui.pauseHomeBtn) ui.pauseHomeBtn.addEventListener('click', goToMainMenuFromPause);
 
     // Fullscreen button for mobile
     const fullscreenBtn = document.getElementById('enter-fullscreen-btn');
@@ -210,6 +229,15 @@ function resizeCanvas() {
     const container = document.getElementById('game-container');
     canvas.width = container.clientWidth;
     canvas.height = container.clientHeight;
+    
+    // Update dino position to maintain 20% from left when screen resizes
+    if (gameRunning || gamePaused) {
+        dino.x = canvas.width * 0.2;
+        // Adjust y position if needed
+        if (dino.grounded) {
+            dino.y = canvas.height - GROUND_HEIGHT - dino.height;
+        }
+    }
     
     // Update game speed when screen size changes
     updateGameSpeed();
@@ -383,6 +411,8 @@ function hideAllOverlays() {
     if (ui.about) ui.about.classList.add('hidden');
     ui.gameOver.classList.add('hidden');
     ui.scoreBoard.classList.add('hidden');
+    if (ui.pauseBtn) ui.pauseBtn.classList.add('hidden');
+    if (ui.pauseOverlay) ui.pauseOverlay.classList.add('hidden');
 }
 
 function logout() {
@@ -393,7 +423,76 @@ function logout() {
     stopMusic();
 }
 
-// Music Logic
+function goToMainMenuFromPause() {
+    gameRunning = false;
+    gamePaused = false;
+    isCountingDown = false;
+    stopMusic();
+    showMainMenu();
+}
+
+// Pause System
+function togglePause() {
+    if (!gameRunning) return;
+    
+    if (!gamePaused) {
+        pauseGame();
+    } else {
+        resumeGameWithCountdown();
+    }
+}
+
+function pauseGame() {
+    gamePaused = true;
+    pausedTime = performance.now();
+    ui.pauseOverlay.classList.remove('hidden');
+    ui.countdownText.style.display = 'none';
+    ui.pauseBtn.textContent = '\u25b6';
+    ui.pauseBtn.title = 'Resume Game';
+    
+    // Pause music
+    if (!bgMusic.paused) {
+        bgMusic.pause();
+    }
+}
+
+function resumeGameWithCountdown() {
+    if (gamePaused && !isCountingDown) {
+        isCountingDown = true;
+        countdownValue = 3;
+        ui.countdownText.textContent = '3';
+        ui.countdownText.style.display = 'block';
+        
+        const countdownInterval = setInterval(() => {
+            countdownValue--;
+            
+            if (countdownValue > 0) {
+                ui.countdownText.textContent = countdownValue.toString();
+            } else if (countdownValue === 0) {
+                ui.countdownText.textContent = 'GO!';
+            } else {
+                // Resume game
+                clearInterval(countdownInterval);
+                ui.pauseOverlay.classList.add('hidden');
+                ui.countdownText.style.display = 'none';
+                ui.pauseBtn.textContent = '⏸';
+                ui.pauseBtn.title = 'Pause Game';
+                
+                gamePaused = false;
+                isCountingDown = false;
+                
+                // Reset timing to prevent jumps - this is crucial!
+                lastTime = 0;
+                deltaTime = 0;
+                
+                // Resume music
+                if (ui.musicToggle.checked && bgMusic.paused) {
+                    bgMusic.play().catch(e => console.log("Music resume failed:", e));
+                }
+            }
+        }, 1000);
+    }
+}
 function playMenuMusic() {
     if (!ui.musicToggle.checked) return;
 
@@ -459,6 +558,7 @@ function updateMusicState() {
 function startGame() {
     hideAllOverlays();
     ui.scoreBoard.classList.remove('hidden');
+    ui.pauseBtn.classList.remove('hidden');
 
     playGameMusic();
 
@@ -467,18 +567,27 @@ function startGame() {
 
 function resetGame() {
     gameRunning = true;
+    gamePaused = false;
+    isCountingDown = false;
     score = 0;
     updateGameSpeed(); // Set appropriate speed based on screen size
     obstacles = [];
     frameCount = 0;
     currentMusicIndex = 0;
     lastScoreMilestone = 0;
+    lastTime = 0;
+    deltaTime = 0;
 
+    // Position dino at 20% of screen width from left
+    dino.x = canvas.width * 0.2;
     dino.y = canvas.height - GROUND_HEIGHT - dino.height;
     dino.dy = 0;
 
     ui.gameOver.classList.add('hidden');
     ui.scoreBoard.classList.remove('hidden');
+    ui.pauseBtn.classList.remove('hidden');
+    ui.pauseBtn.textContent = '⏸';
+    ui.pauseBtn.title = 'Pause Game';
 
     if (currentUser) ui.highScore.textContent = currentUser.highScore;
 
@@ -506,12 +615,14 @@ function spawnObstacle() {
     obstacles.push(obstacle);
 }
 
-function update() {
+function update(deltaTime) {
     if (!gameRunning) return;
 
     frameCount++;
-    score += 0.1;
-    gameSpeed += 0.001;
+    // Score increases at 10 points per second
+    score += 10 * deltaTime;
+    // Speed increases at 8 pixels/sec per second
+    gameSpeed += 8 * deltaTime;
 
     ui.currentScore.textContent = Math.floor(score);
 
@@ -522,13 +633,15 @@ function update() {
         changeGameMusic(currentScoreMilestone);
     }
 
-    dino.update();
+    dino.update(deltaTime);
 
-    bgOffset -= gameSpeed * 0.5;
+    // Background scrolling speed (50% of game speed)
+    bgOffset -= gameSpeed * 0.5 * deltaTime;
     if (bgOffset <= -canvas.width) bgOffset = 0;
 
-    let minGap = gameSpeed * 60;
-    let maxGap = minGap + 500;
+    // Dynamic obstacle spacing based on current speed
+    let minGap = gameSpeed * 1.3; // 1.3 seconds of distance for adequate reaction time
+    let maxGap = minGap + 500; // Plus 500 pixels for variety
 
     if (obstacles.length === 0) {
         spawnObstacle();
@@ -537,7 +650,8 @@ function update() {
         const gap = canvas.width - lastObstacle.x;
 
         if (gap > minGap) {
-            if (Math.random() < 0.02 || gap > maxGap) {
+            // Time-based spawn probability (2% chance per second)
+            if (Math.random() < 0.02 * deltaTime * 60 || gap > maxGap) {
                 spawnObstacle();
             }
         }
@@ -545,7 +659,7 @@ function update() {
 
     for (let i = obstacles.length - 1; i >= 0; i--) {
         let obs = obstacles[i];
-        obs.x -= gameSpeed;
+        obs.x -= gameSpeed * deltaTime;
 
         if (
             dino.x < obs.x + obs.width &&
@@ -579,9 +693,26 @@ function draw() {
     dino.draw();
 }
 
-function gameLoop() {
+function gameLoop(currentTime) {
     if (!gameRunning) return;
-    update();
+    
+    // If game is paused or counting down, just continue the loop without updating
+    if (gamePaused || isCountingDown) {
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+    
+    // Calculate delta time in seconds
+    if (lastTime === 0) {
+        lastTime = currentTime;
+    }
+    deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
+    lastTime = currentTime;
+    
+    // Cap deltaTime to prevent large jumps (e.g., when tab becomes inactive)
+    deltaTime = Math.min(deltaTime, 1/30); // Max 30 FPS equivalent
+    
+    update(deltaTime);
     draw();
     requestAnimationFrame(gameLoop);
 }
