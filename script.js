@@ -33,7 +33,7 @@ function getGameSpeedMultiplier() {
 
 function updateGameSpeed() {
     const multiplier = getGameSpeedMultiplier();
-    baseGameSpeed = 300 * multiplier; // 300 pixels per second base
+    baseGameSpeed = 200 * multiplier; // 100 pixels per second base
     gameSpeed = baseGameSpeed;
 }
 
@@ -186,6 +186,10 @@ const ui = {
 const bgMusic = document.getElementById('bg-music');
 let currentMusicIndex = 0;
 let lastScoreMilestone = 0;
+let isLoadingMusic = false;
+let currentMusicSrc = '';
+let hasUserInteracted = false;
+let pendingMusicAction = null;
 
 // Auth State
 let isRegisterMode = false;
@@ -196,6 +200,7 @@ function init() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
+    setupUserInteractionDetection();
     setupAuthUI();
     setupMenuUI();
 
@@ -224,6 +229,60 @@ function init() {
     // Auto-enter fullscreen on orientation change to landscape (mobile only)
     window.addEventListener('orientationchange', handleOrientationChange);
     window.addEventListener('resize', handleOrientationChange);
+}
+
+function setupUserInteractionDetection() {
+    const interactionEvents = ['click', 'touchstart', 'keydown'];
+    
+    const enableAudio = () => {
+        if (!hasUserInteracted) {
+            hasUserInteracted = true;
+            console.log('User interaction detected - audio enabled');
+            
+            // Execute any pending music action
+            if (pendingMusicAction) {
+                pendingMusicAction();
+                pendingMusicAction = null;
+            }
+            
+            // Remove listeners after first interaction
+            interactionEvents.forEach(event => {
+                document.removeEventListener(event, enableAudio);
+            });
+        }
+    };
+    
+    // Add interaction listeners
+    interactionEvents.forEach(event => {
+        document.addEventListener(event, enableAudio, { once: true });
+    });
+}
+
+function setupUserInteractionDetection() {
+    const interactionEvents = ['click', 'touchstart', 'keydown'];
+    
+    const enableAudio = () => {
+        if (!hasUserInteracted) {
+            hasUserInteracted = true;
+            console.log('User interaction detected - audio enabled');
+            
+            // Execute any pending music action
+            if (pendingMusicAction) {
+                pendingMusicAction();
+                pendingMusicAction = null;
+            }
+            
+            // Remove listeners after first interaction
+            interactionEvents.forEach(event => {
+                document.removeEventListener(event, enableAudio);
+            });
+        }
+    };
+    
+    // Add interaction listeners
+    interactionEvents.forEach(event => {
+        document.addEventListener(event, enableAudio, { once: true });
+    });
 }
 
 function resizeCanvas() {
@@ -511,33 +570,82 @@ function resumeGameWithCountdown() {
     }
 }
 function playMenuMusic() {
-    if (!ui.musicToggle.checked) return;
+    if (!ui.musicToggle.checked || isLoadingMusic) return;
 
-    if (!bgMusic.src.includes('main_menu_theme.mp3')) {
-        bgMusic.src = menuTheme;
-        bgMusic.loop = true;
-        bgMusic.play().catch(e => console.log("Menu music play failed:", e));
-    } else if (bgMusic.paused) {
-        bgMusic.play().catch(e => console.log("Menu music resume failed:", e));
+    const playAudio = () => {
+        if (currentMusicSrc !== menuTheme) {
+            isLoadingMusic = true;
+            bgMusic.pause();
+            bgMusic.src = menuTheme;
+            currentMusicSrc = menuTheme;
+            bgMusic.loop = true;
+            
+            bgMusic.addEventListener('canplaythrough', function onCanPlay() {
+                bgMusic.removeEventListener('canplaythrough', onCanPlay);
+                isLoadingMusic = false;
+                if (ui.musicToggle.checked && hasUserInteracted) {
+                    bgMusic.play().catch(e => console.log("Menu music play failed:", e));
+                }
+            }, { once: true });
+            
+            bgMusic.load();
+        } else if (bgMusic.paused && !isLoadingMusic && hasUserInteracted) {
+            bgMusic.play().catch(e => console.log("Menu music resume failed:", e));
+        }
+    };
+    
+    if (hasUserInteracted) {
+        playAudio();
+    } else {
+        // Store the action to execute after user interaction
+        pendingMusicAction = playAudio;
+        console.log('Menu music queued - waiting for user interaction');
     }
 }
 
 function playGameMusic() {
-    if (!ui.musicToggle.checked) {
+    if (!ui.musicToggle.checked || isLoadingMusic) {
         console.log("Music is disabled in settings");
         return;
     }
 
     const randomTrack = musicTracks[Math.floor(Math.random() * musicTracks.length)];
-    console.log("Playing game music:", randomTrack);
-    bgMusic.src = randomTrack;
-    bgMusic.loop = true;
-    bgMusic.play().catch(e => console.log("Game music play failed:", e));
+    
+    if (currentMusicSrc === randomTrack && !bgMusic.paused) {
+        return; // Already playing this track
+    }
+    
+    const playAudio = () => {
+        isLoadingMusic = true;
+        console.log("Playing game music:", randomTrack);
+        bgMusic.pause();
+        bgMusic.src = randomTrack;
+        currentMusicSrc = randomTrack;
+        bgMusic.loop = true;
+        
+        bgMusic.addEventListener('canplaythrough', function onCanPlay() {
+            bgMusic.removeEventListener('canplaythrough', onCanPlay);
+            isLoadingMusic = false;
+            if (ui.musicToggle.checked && gameRunning && !gamePaused && hasUserInteracted) {
+                bgMusic.play().catch(e => console.log("Game music play failed:", e));
+            }
+        }, { once: true });
+        
+        bgMusic.load();
+    };
+    
+    if (hasUserInteracted) {
+        playAudio();
+    } else {
+        // Store the action to execute after user interaction
+        pendingMusicAction = playAudio;
+        console.log('Game music queued - waiting for user interaction');
+    }
 }
 
 function changeGameMusic(scoreBasedIndex) {
-    if (!ui.musicToggle.checked) {
-        console.log("Music is disabled in settings");
+    if (!ui.musicToggle.checked || isLoadingMusic || !hasUserInteracted) {
+        console.log("Music is disabled in settings or no user interaction");
         return;
     }
 
@@ -545,14 +653,32 @@ function changeGameMusic(scoreBasedIndex) {
     const randomTrackIndex = Math.floor(Math.random() * musicTracks.length);
     const selectedTrack = musicTracks[randomTrackIndex];
     
+    // Don't change to the same track
+    if (currentMusicSrc === selectedTrack) {
+        return;
+    }
+    
+    isLoadingMusic = true;
     console.log(`Changing music at score ${Math.floor(score)} to random track ${randomTrackIndex + 1}: ${selectedTrack}`);
     
+    bgMusic.pause();
     bgMusic.src = selectedTrack;
+    currentMusicSrc = selectedTrack;
     bgMusic.loop = true;
-    bgMusic.play().catch(e => console.log("Music change failed:", e));
+    
+    bgMusic.addEventListener('canplaythrough', function onCanPlay() {
+        bgMusic.removeEventListener('canplaythrough', onCanPlay);
+        isLoadingMusic = false;
+        if (ui.musicToggle.checked && gameRunning && !gamePaused && hasUserInteracted) {
+            bgMusic.play().catch(e => console.log("Music change failed:", e));
+        }
+    }, { once: true });
+    
+    bgMusic.load();
 }
 
 function stopMusic() {
+    isLoadingMusic = false;
     bgMusic.pause();
     bgMusic.currentTime = 0;
 }
@@ -564,11 +690,13 @@ function updateMusicState() {
     if (enabled) {
         if (!gameRunning && !ui.mainMenu.classList.contains('hidden')) {
             playMenuMusic();
-        } else if (gameRunning) {
-            if (bgMusic.paused) bgMusic.play();
+        } else if (gameRunning && !isLoadingMusic && hasUserInteracted) {
+            if (bgMusic.paused) bgMusic.play().catch(e => console.log("Music resume failed:", e));
         }
     } else {
         bgMusic.pause();
+        isLoadingMusic = false;
+        pendingMusicAction = null;
     }
 }
 
@@ -647,9 +775,9 @@ function update(deltaTime) {
 
     ui.currentScore.textContent = Math.floor(score);
 
-    // Check for music change every 300 points
-    const currentScoreMilestone = Math.floor(score / 300);
-    if (currentScoreMilestone > lastScoreMilestone && currentScoreMilestone > 0) {
+    // Check for music change every 600 points (reduced frequency)
+    const currentScoreMilestone = Math.floor(score / 600);
+    if (currentScoreMilestone > lastScoreMilestone && currentScoreMilestone > 0 && !isLoadingMusic) {
         lastScoreMilestone = currentScoreMilestone;
         changeGameMusic(currentScoreMilestone);
     }
@@ -661,7 +789,7 @@ function update(deltaTime) {
     if (bgOffset <= -canvas.width) bgOffset = 0;
 
     // Dynamic obstacle spacing based on current speed
-    let minGap = gameSpeed * 1.5; // 1.5 seconds of distance for adequate reaction time
+    let minGap = gameSpeed * 1.8; // 1.8 seconds of distance for adequate reaction time
     let maxGap = minGap + 500; // Plus 500 pixels for variety
 
     if (obstacles.length === 0) {
