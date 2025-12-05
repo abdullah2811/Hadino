@@ -63,7 +63,8 @@ const musicTracks = [
     'assets/music12.mp3',
     'assets/music13.mp3',
     'assets/music14.mp3',
-    'assets/music15.mp3'
+    'assets/music15.mp3',
+    'assets/music16.mp3'
 ];
 const menuTheme = 'assets/main_menu_theme.mp3';
 
@@ -640,7 +641,7 @@ function update(deltaTime) {
 
     frameCount++;
     // Score increases at 10 points per second
-    score += 100 * deltaTime;
+    score += 10 * deltaTime;
     // Speed increases at 8 pixels/sec per second
     gameSpeed += 8 * deltaTime;
 
@@ -660,7 +661,7 @@ function update(deltaTime) {
     if (bgOffset <= -canvas.width) bgOffset = 0;
 
     // Dynamic obstacle spacing based on current speed
-    let minGap = gameSpeed * 1.3; // 1.3 seconds of distance for adequate reaction time
+    let minGap = gameSpeed * 1.5; // 1.5 seconds of distance for adequate reaction time
     let maxGap = minGap + 500; // Plus 500 pixels for variety
 
     if (obstacles.length === 0) {
