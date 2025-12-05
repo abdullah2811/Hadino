@@ -326,11 +326,13 @@ async function registerUser(userId, name) {
     const userData = {
         name: name,
         highScore: 0,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
     };
 
     await userRef.set(userData);
     currentUser = { id: userId, ...userData };
+    console.log("User registered successfully with highScore initialized to 0");
 }
 
 async function loginUser(userId) {
@@ -341,12 +343,26 @@ async function loginUser(userId) {
         throw new Error("User ID not found. Please register.");
     }
 
-    currentUser = { id: userId, ...doc.data() };
+    const userData = doc.data();
+    // Ensure highScore exists and is a number
+    if (typeof userData.highScore !== 'number') {
+        userData.highScore = 0;
+        // Update the user document to fix missing highScore
+        await userRef.update({ highScore: 0 });
+        console.log("Fixed missing highScore for user:", userId);
+    }
+
+    currentUser = { id: userId, ...userData };
+    console.log("User logged in:", currentUser.name, "High Score:", currentUser.highScore);
 }
 
 async function fetchLeaderboard() {
     try {
         ui.topScoresList.innerHTML = '<li>Loading...</li>';
+        
+        // Add a small delay to ensure database connection is stable
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const snapshot = await db.collection('users')
             .orderBy('highScore', 'desc')
             .limit(50)
@@ -363,14 +379,14 @@ async function fetchLeaderboard() {
         snapshot.forEach(doc => {
             const data = doc.data();
             const li = document.createElement('li');
-            li.innerHTML = `<span>${rank}. ${data.name} <small>(${doc.id})</small></span> <span>${data.highScore}</span>`;
+            li.innerHTML = `<span>${rank}. ${data.name} <small>(${doc.id})</small></span> <span>${data.highScore || 0}</span>`;
             ui.topScoresList.appendChild(li);
             rank++;
         });
 
     } catch (error) {
         console.error("Error fetching leaderboard:", error);
-        ui.topScoresList.innerHTML = '<li>Error loading scores.</li>';
+        ui.topScoresList.innerHTML = '<li>Error loading scores. <button onclick="fetchLeaderboard()" style="background:none;border:none;color:#4CAF50;cursor:pointer;text-decoration:underline;">Retry</button></li>';
     }
 }
 
@@ -589,7 +605,11 @@ function resetGame() {
     ui.pauseBtn.textContent = '⏸';
     ui.pauseBtn.title = 'Pause Game';
 
-    if (currentUser) ui.highScore.textContent = currentUser.highScore;
+    if (currentUser) {
+        ui.highScore.textContent = currentUser.highScore;
+    } else {
+        ui.highScore.textContent = '0';
+    }
 
     playGameMusic();
 
@@ -620,7 +640,7 @@ function update(deltaTime) {
 
     frameCount++;
     // Score increases at 10 points per second
-    score += 10 * deltaTime;
+    score += 100 * deltaTime;
     // Speed increases at 8 pixels/sec per second
     gameSpeed += 8 * deltaTime;
 
@@ -719,6 +739,8 @@ function gameLoop(currentTime) {
 
 async function gameOver() {
     gameRunning = false;
+    gamePaused = false;
+    isCountingDown = false;
     stopMusic();
 
     const finalScore = Math.floor(score);
@@ -726,16 +748,21 @@ async function gameOver() {
     ui.finalScore.textContent = finalScore;
     ui.gameOver.classList.remove('hidden');
     ui.scoreBoard.classList.add('hidden');
+    ui.pauseBtn.classList.add('hidden');
 
     if (currentUser && finalScore > currentUser.highScore) {
         currentUser.highScore = finalScore;
+        
+        // Update both local storage and Firestore
+        localStorage.setItem('ruralRunner_user', JSON.stringify(currentUser));
+        
         try {
             await db.collection('users').doc(currentUser.id).update({
                 highScore: finalScore
             });
-            console.log("New high score saved!");
+            console.log("New high score saved to leaderboard!");
         } catch (error) {
-            console.error("Error saving score:", error);
+            console.error("Error saving score to leaderboard:", error);
         }
     }
 }
