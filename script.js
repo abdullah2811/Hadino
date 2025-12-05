@@ -775,8 +775,8 @@ function update(deltaTime) {
 
     ui.currentScore.textContent = Math.floor(score);
 
-    // Check for music change every 600 points (reduced frequency)
-    const currentScoreMilestone = Math.floor(score / 600);
+    // Check for music change every 400 points (reduced frequency)
+    const currentScoreMilestone = Math.floor(score / 400);
     if (currentScoreMilestone > lastScoreMilestone && currentScoreMilestone > 0 && !isLoadingMusic) {
         lastScoreMilestone = currentScoreMilestone;
         changeGameMusic(currentScoreMilestone);
