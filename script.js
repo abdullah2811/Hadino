@@ -88,7 +88,8 @@ const musicTracks = [
     'assets/music13.mp3',
     'assets/music14.mp3',
     'assets/music15.mp3',
-    'assets/music16.mp3'
+    'assets/music16.mp3',
+    'assets/music17.mp3'
 ];
 const menuTheme = 'assets/main_menu_theme.mp3';
 
