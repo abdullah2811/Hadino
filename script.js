@@ -884,8 +884,7 @@ function update(deltaTime) {
 
     // Update displayed high score in real-time if current score exceeds it
     if (currentUser && Math.floor(score) > currentUser.highScore) {
-        currentUser.highScore = Math.floor(score);
-        ui.highScore.textContent = currentUser.highScore;
+        ui.highScore.textContent = Math.floor(score);
     }
 
     // Check for music change every 400 points (reduced frequency)
