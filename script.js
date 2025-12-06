@@ -35,6 +35,30 @@ function updateGameSpeed() {
     const multiplier = getGameSpeedMultiplier();
     baseGameSpeed = 300 * multiplier; // 300 pixels per second base
     gameSpeed = baseGameSpeed;
+    
+    // Update physics based on current game speed
+    updatePhysicsConstants();
+}
+
+function updatePhysicsConstants() {
+    // Calculate speed factor (how much faster than base speed)
+    const speedFactor = gameSpeed / 300; // 300 is reference speed (base starting speed)
+
+    // Update gravity: faster speed = stronger gravity for quicker landing
+    // Multiplicative model keeps growth smooth
+    let newGravity = BASE_GRAVITY * speedFactor * GRAVITY_SPEED_MULTIPLIER;
+
+    // Clamp gravity to avoid impossible scenarios
+    const minGravity = BASE_GRAVITY * 0.9;
+    const maxGravity = BASE_GRAVITY * 2.5; // upper bound for playability
+    GRAVITY = Math.max(minGravity, Math.min(maxGravity, newGravity));
+
+    // Keep jump height constant: H = J^2 / (2G) => J ∝ sqrt(G)
+    // Scale jump force with sqrt of gravity ratio
+    const jumpScale = Math.sqrt(GRAVITY / BASE_GRAVITY);
+    // Clamp jump scaling to sensible bounds
+    const clampedJumpScale = Math.max(0.9, Math.min(1.6, jumpScale));
+    JUMP_FORCE = BASE_JUMP_FORCE * clampedJumpScale;
 }
 
 // Assets
@@ -69,16 +93,21 @@ const musicTracks = [
 const menuTheme = 'assets/main_menu_theme.mp3';
 
 // Physics Constants (per second)
-const GRAVITY = 1200; // pixels per second squared
-const JUMP_FORCE = -600; // pixels per second
+const BASE_GRAVITY = 1200; // Base gravity pixels per second squared
+const BASE_JUMP_FORCE = -700; // Base jump force pixels per second
 const GROUND_HEIGHT = 50;
+const GRAVITY_SPEED_MULTIPLIER = 1.2; // How much speed affects gravity (1.2 = 120% correlation)
+
+// Current physics values (will be updated based on game speed)
+let GRAVITY = BASE_GRAVITY;
+let JUMP_FORCE = BASE_JUMP_FORCE;
 
 // Game Objects
 const dino = {
     x: 0, // Will be set to 40% of canvas width
     y: 0,
     width: 120,
-    height: 150,
+    height: 200,
     dy: 0,
     jumpTimer: 0,
     grounded: false,
@@ -770,8 +799,11 @@ function update(deltaTime) {
     frameCount++;
     // Score increases at 10 points per second
     score += 10 * deltaTime;
-    // Speed increases at 8 pixels/sec per second
-    gameSpeed += 8 * deltaTime;
+    // Speed increases at 4 pixels/sec per second
+    gameSpeed += 4 * deltaTime;
+    
+    // Update physics constants based on new speed
+    updatePhysicsConstants();
 
     ui.currentScore.textContent = Math.floor(score);
 
@@ -788,8 +820,15 @@ function update(deltaTime) {
     bgOffset -= gameSpeed * 0.5 * deltaTime;
     if (bgOffset <= -canvas.width) bgOffset = 0;
 
-    // Dynamic obstacle spacing based on current speed
-    let minGap = gameSpeed * 1.8; // 1.8 seconds of distance for adequate reaction time
+    // Dynamic obstacle spacing based on current speed and air time
+    // Ensure the player has enough runway or airtime to react
+    const flightTimeUp = Math.abs(JUMP_FORCE) / GRAVITY; // time to peak
+    const totalAirTime = flightTimeUp * 2; // symmetric approximation
+    // Base reaction window in seconds, slightly reduces as speed grows
+    const speedFactor = gameSpeed / 300;
+    const reactionWindow = Math.max(1.2, 1.8 - 0.4 * (speedFactor - 1));
+    // Ensure min gap considers both runway and airtime
+    let minGap = gameSpeed * Math.max(reactionWindow, totalAirTime * 0.8);
     let maxGap = minGap + 500; // Plus 500 pixels for variety
 
     if (obstacles.length === 0) {
