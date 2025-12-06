@@ -95,7 +95,7 @@ const menuTheme = 'assets/main_menu_theme.mp3';
 
 // Physics Constants (per second)
 const BASE_GRAVITY = 1200; // Base gravity pixels per second squared
-const BASE_JUMP_FORCE = -700; // Base jump force pixels per second
+const BASE_JUMP_FORCE = -650; // Base jump force pixels per second
 const GROUND_HEIGHT = 50;
 const GRAVITY_SPEED_MULTIPLIER = 1.2; // How much speed affects gravity (1.2 = 120% correlation)
 
@@ -108,7 +108,7 @@ const dino = {
     x: 0, // Will be set to 40% of canvas width
     y: 0,
     width: 120,
-    height: 200,
+    height: 150,
     dy: 0,
     jumpTimer: 0,
     grounded: false,
@@ -205,6 +205,8 @@ const ui = {
     restartBtn: document.getElementById('restart-btn'),
     homeBtn: document.getElementById('home-btn'),
     topScoresList: document.getElementById('top-scores-list'),
+    muteBtn: document.getElementById('mute-btn'),
+    nextMusicBtn: document.getElementById('next-music-btn'),
     pauseBtn: document.getElementById('pause-btn'),
     pauseOverlay: document.getElementById('pause-overlay'),
     countdownText: document.getElementById('countdown-text'),
@@ -220,6 +222,7 @@ let isLoadingMusic = false;
 let currentMusicSrc = '';
 let hasUserInteracted = false;
 let pendingMusicAction = null;
+let isMuted = false;
 
 // Auth State
 let isRegisterMode = false;
@@ -234,10 +237,16 @@ function init() {
     setupAuthUI();
     setupMenuUI();
 
-    const savedUser = localStorage.getItem('ruralRunner_user');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        showMainMenu();
+    const savedUserId = localStorage.getItem('ruralRunner_userId');
+    if (savedUserId) {
+        // Fetch fresh data from Firestore on page load
+        loginUser(savedUserId).then(() => {
+            showMainMenu();
+        }).catch(err => {
+            console.error('Auto-login failed:', err);
+            localStorage.removeItem('ruralRunner_userId');
+            ui.login.classList.remove('hidden');
+        });
     }
 
     const musicEnabled = localStorage.getItem('ruralRunner_music') !== 'false';
@@ -246,6 +255,8 @@ function init() {
     if (ui.restartBtn) ui.restartBtn.addEventListener('click', resetGame);
     if (ui.homeBtn) ui.homeBtn.addEventListener('click', showMainMenu);
     if (ui.musicToggle) ui.musicToggle.addEventListener('change', updateMusicState);
+    if (ui.muteBtn) ui.muteBtn.addEventListener('click', toggleMute);
+    if (ui.nextMusicBtn) ui.nextMusicBtn.addEventListener('click', playNextMusic);
     if (ui.pauseBtn) ui.pauseBtn.addEventListener('click', togglePause);
     if (ui.resumeBtn) ui.resumeBtn.addEventListener('click', resumeGameWithCountdown);
     if (ui.pauseHomeBtn) ui.pauseHomeBtn.addEventListener('click', goToMainMenuFromPause);
@@ -389,7 +400,8 @@ async function handleAuthAction() {
             await loginUser(userId);
         }
 
-        localStorage.setItem('ruralRunner_user', JSON.stringify(currentUser));
+        // Store only user ID for auto-login, highScore always from Firestore
+        localStorage.setItem('ruralRunner_userId', currentUser.id);
         showMainMenu();
 
     } catch (error) {
@@ -442,8 +454,9 @@ async function loginUser(userId) {
         console.log("Fixed missing highScore for user:", userId);
     }
 
+    // Always use Firestore as single source of truth
     currentUser = { id: userId, ...userData };
-    console.log("User logged in:", currentUser.name, "High Score:", currentUser.highScore);
+    console.log("User logged in:", currentUser.name, "High Score from Firestore:", currentUser.highScore);
 }
 
 async function fetchLeaderboard() {
@@ -517,12 +530,14 @@ function hideAllOverlays() {
     if (ui.about) ui.about.classList.add('hidden');
     ui.gameOver.classList.add('hidden');
     ui.scoreBoard.classList.add('hidden');
+    if (ui.muteBtn) ui.muteBtn.classList.add('hidden');
+    if (ui.nextMusicBtn) ui.nextMusicBtn.classList.add('hidden');
     if (ui.pauseBtn) ui.pauseBtn.classList.add('hidden');
     if (ui.pauseOverlay) ui.pauseOverlay.classList.add('hidden');
 }
 
 function logout() {
-    localStorage.removeItem('ruralRunner_user');
+    localStorage.removeItem('ruralRunner_userId');
     currentUser = null;
     hideAllOverlays();
     ui.login.classList.remove('hidden');
@@ -592,7 +607,7 @@ function resumeGameWithCountdown() {
                 deltaTime = 0;
                 
                 // Resume music
-                if (ui.musicToggle.checked && bgMusic.paused) {
+                if (ui.musicToggle.checked && bgMusic.paused && !isMuted) {
                     bgMusic.play().catch(e => console.log("Music resume failed:", e));
                 }
             }
@@ -613,13 +628,13 @@ function playMenuMusic() {
             bgMusic.addEventListener('canplaythrough', function onCanPlay() {
                 bgMusic.removeEventListener('canplaythrough', onCanPlay);
                 isLoadingMusic = false;
-                if (ui.musicToggle.checked && hasUserInteracted) {
+                if (ui.musicToggle.checked && hasUserInteracted && !isMuted) {
                     bgMusic.play().catch(e => console.log("Menu music play failed:", e));
                 }
             }, { once: true });
             
             bgMusic.load();
-        } else if (bgMusic.paused && !isLoadingMusic && hasUserInteracted) {
+        } else if (bgMusic.paused && !isLoadingMusic && hasUserInteracted && !isMuted) {
             bgMusic.play().catch(e => console.log("Menu music resume failed:", e));
         }
     };
@@ -656,7 +671,7 @@ function playGameMusic() {
         bgMusic.addEventListener('canplaythrough', function onCanPlay() {
             bgMusic.removeEventListener('canplaythrough', onCanPlay);
             isLoadingMusic = false;
-            if (ui.musicToggle.checked && gameRunning && !gamePaused && hasUserInteracted) {
+            if (ui.musicToggle.checked && gameRunning && !gamePaused && hasUserInteracted && !isMuted) {
                 bgMusic.play().catch(e => console.log("Game music play failed:", e));
             }
         }, { once: true });
@@ -699,7 +714,7 @@ function changeGameMusic(scoreBasedIndex) {
     bgMusic.addEventListener('canplaythrough', function onCanPlay() {
         bgMusic.removeEventListener('canplaythrough', onCanPlay);
         isLoadingMusic = false;
-        if (ui.musicToggle.checked && gameRunning && !gamePaused && hasUserInteracted) {
+        if (ui.musicToggle.checked && gameRunning && !gamePaused && hasUserInteracted && !isMuted) {
             bgMusic.play().catch(e => console.log("Music change failed:", e));
         }
     }, { once: true });
@@ -711,6 +726,57 @@ function stopMusic() {
     isLoadingMusic = false;
     bgMusic.pause();
     bgMusic.currentTime = 0;
+}
+
+function toggleMute() {
+    isMuted = !isMuted;
+    
+    if (isMuted) {
+        bgMusic.pause();
+        ui.muteBtn.textContent = '🔇';
+        ui.muteBtn.title = 'Unmute Music';
+        console.log('Music muted');
+    } else {
+        // Resume music if game is running and not paused
+        if (gameRunning && !gamePaused && hasUserInteracted) {
+            bgMusic.play().catch(e => console.log('Music resume failed:', e));
+        }
+        ui.muteBtn.textContent = '🔊';
+        ui.muteBtn.title = 'Mute Music';
+        console.log('Music unmuted');
+    }
+}
+
+function playNextMusic() {
+    if (!hasUserInteracted) {
+        console.log('Cannot change music - no user interaction yet');
+        return;
+    }
+    
+    // Get a random track different from current
+    let randomTrack;
+    do {
+        randomTrack = musicTracks[Math.floor(Math.random() * musicTracks.length)];
+    } while (randomTrack === currentMusicSrc && musicTracks.length > 1);
+    
+    isLoadingMusic = true;
+    console.log('Manually switching to:', randomTrack);
+    
+    bgMusic.pause();
+    bgMusic.src = randomTrack;
+    currentMusicSrc = randomTrack;
+    bgMusic.loop = true;
+    
+    bgMusic.addEventListener('canplaythrough', function onCanPlay() {
+        bgMusic.removeEventListener('canplaythrough', onCanPlay);
+        isLoadingMusic = false;
+        // Play only if not muted and game is running
+        if (!isMuted && gameRunning && hasUserInteracted) {
+            bgMusic.play().catch(e => console.log('Next music play failed:', e));
+        }
+    }, { once: true });
+    
+    bgMusic.load();
 }
 
 function updateMusicState() {
@@ -733,6 +799,8 @@ function updateMusicState() {
 function startGame() {
     hideAllOverlays();
     ui.scoreBoard.classList.remove('hidden');
+    ui.muteBtn.classList.remove('hidden');
+    ui.nextMusicBtn.classList.remove('hidden');
     ui.pauseBtn.classList.remove('hidden');
 
     playGameMusic();
@@ -760,9 +828,15 @@ function resetGame() {
 
     ui.gameOver.classList.add('hidden');
     ui.scoreBoard.classList.remove('hidden');
+    ui.muteBtn.classList.remove('hidden');
+    ui.nextMusicBtn.classList.remove('hidden');
     ui.pauseBtn.classList.remove('hidden');
     ui.pauseBtn.textContent = '⏸';
     ui.pauseBtn.title = 'Pause Game';
+    
+    // Update mute button state
+    ui.muteBtn.textContent = isMuted ? '🔇' : '🔊';
+    ui.muteBtn.title = isMuted ? 'Unmute Music' : 'Mute Music';
 
     if (currentUser) {
         ui.highScore.textContent = currentUser.highScore;
@@ -800,13 +874,19 @@ function update(deltaTime) {
     frameCount++;
     // Score increases at 10 points per second
     score += 10 * deltaTime;
-    // Speed increases at 4 pixels/sec per second
-    gameSpeed += 4 * deltaTime;
+    // Speed increases at 6 pixels/sec per second
+    gameSpeed += 7 * deltaTime;
     
     // Update physics constants based on new speed
     updatePhysicsConstants();
-
+    
     ui.currentScore.textContent = Math.floor(score);
+
+    // Update displayed high score in real-time if current score exceeds it
+    if (currentUser && Math.floor(score) > currentUser.highScore) {
+        currentUser.highScore = Math.floor(score);
+        ui.highScore.textContent = currentUser.highScore;
+    }
 
     // Check for music change every 400 points (reduced frequency)
     const currentScoreMilestone = Math.floor(score / 400);
@@ -917,21 +997,22 @@ async function gameOver() {
     ui.finalScore.textContent = finalScore;
     ui.gameOver.classList.remove('hidden');
     ui.scoreBoard.classList.add('hidden');
+    ui.muteBtn.classList.add('hidden');
+    ui.nextMusicBtn.classList.add('hidden');
     ui.pauseBtn.classList.add('hidden');
 
     if (currentUser && finalScore > currentUser.highScore) {
         currentUser.highScore = finalScore;
         
-        // Update both local storage and Firestore
-        localStorage.setItem('ruralRunner_user', JSON.stringify(currentUser));
-        
+        // Update only Firestore (single source of truth)
         try {
             await db.collection('users').doc(currentUser.id).update({
-                highScore: finalScore
+                highScore: finalScore,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
             });
-            console.log("New high score saved to leaderboard!");
+            console.log("New high score saved to Firestore:", finalScore);
         } catch (error) {
-            console.error("Error saving score to leaderboard:", error);
+            console.error("Error saving score to Firestore:", error);
         }
     }
 }

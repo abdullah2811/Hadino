@@ -29,8 +29,12 @@
         </div>
 
         <div id="ui-layer">
-            <!-- Pause Button (Top-Left) -->
-            <button id="pause-btn" class="pause-button hidden" title="Pause Game">⏸</button>
+            <!-- Game Control Buttons (Top-Left) -->
+            <div class="game-controls">
+                <button id="mute-btn" class="control-button hidden" title="Mute Music">🔊</button>
+                <button id="next-music-btn" class="control-button hidden" title="Next Music">⏭️</button>
+                <button id="pause-btn" class="control-button hidden" title="Pause Game">⏸</button>
+            </div>
             
             <div id="score-board" class="hidden">
                 <span>Score: <span id="current-score">0</span></span>
@@ -165,6 +169,6 @@
 
         <!--    Config and Game Script -->
         <script src="firebase-config.js"></script>
-        <script src="scriptf.js"></script>
+        <script src="script.js"></script>
 </body>
 </html>
