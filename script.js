@@ -33,7 +33,7 @@ function getGameSpeedMultiplier() {
 
 function updateGameSpeed() {
     const multiplier = getGameSpeedMultiplier();
-    baseGameSpeed = 200 * multiplier; // 100 pixels per second base
+    baseGameSpeed = 300 * multiplier; // 300 pixels per second base
     gameSpeed = baseGameSpeed;
 }
 
