@@ -909,7 +909,8 @@ function update(deltaTime) {
     const reactionWindow = Math.max(1.2, 1.8 - 0.4 * (speedFactor - 1));
     // Ensure min gap considers both runway and airtime
     let minGap = gameSpeed * Math.max(reactionWindow, totalAirTime * 0.8);
-    let maxGap = minGap + 500; // Plus 500 pixels for variety
+    // Max gap increases with speed: base 500 + speed-dependent scaling
+    let maxGap = minGap + (700 + gameSpeed * 0.5); // Scales with game speed
 
     if (obstacles.length === 0) {
         spawnObstacle();
@@ -918,8 +919,11 @@ function update(deltaTime) {
         const gap = canvas.width - lastObstacle.x;
 
         if (gap > minGap) {
+            // Random gap within [minGap, maxGap] interval
+            const randomGapThreshold = minGap + Math.random() * (maxGap - minGap);
+            
             // Time-based spawn probability (2% chance per second)
-            if (Math.random() < 0.02 * deltaTime * 60 || gap > maxGap) {
+            if (Math.random() < 0.02 * deltaTime * 60 || gap > randomGapThreshold) {
                 spawnObstacle();
             }
         }
