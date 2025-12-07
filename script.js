@@ -154,7 +154,28 @@ let bgOffset = 0;
 
 // Input Handling
 const keys = {};
-window.addEventListener('keydown', e => keys[e.code] = true);
+window.addEventListener('keydown', e => {
+    keys[e.code] = true;
+    
+    // Keyboard shortcuts for game controls (case-insensitive)
+    if (gameRunning || gamePaused) {
+        const key = e.key.toLowerCase();
+        
+        if (key === 'm') {
+            // Mute/Unmute
+            e.preventDefault();
+            if (ui.muteBtn) ui.muteBtn.click();
+        } else if (key === 'p') {
+            // Pause/Resume
+            e.preventDefault();
+            if (ui.pauseBtn) ui.pauseBtn.click();
+        } else if (key === 'n') {
+            // Next Music
+            e.preventDefault();
+            if (ui.nextMusicBtn) ui.nextMusicBtn.click();
+        }
+    }
+});
 window.addEventListener('keyup', e => keys[e.code] = false);
 
 canvas.addEventListener('mousedown', () => keys['Click'] = true);
@@ -208,6 +229,7 @@ const ui = {
     muteBtn: document.getElementById('mute-btn'),
     nextMusicBtn: document.getElementById('next-music-btn'),
     pauseBtn: document.getElementById('pause-btn'),
+    shortcutsBtn: document.getElementById('shortcuts-btn'),
     pauseOverlay: document.getElementById('pause-overlay'),
     countdownText: document.getElementById('countdown-text'),
     resumeBtn: document.getElementById('resume-btn'),
@@ -533,6 +555,7 @@ function hideAllOverlays() {
     if (ui.muteBtn) ui.muteBtn.classList.add('hidden');
     if (ui.nextMusicBtn) ui.nextMusicBtn.classList.add('hidden');
     if (ui.pauseBtn) ui.pauseBtn.classList.add('hidden');
+    if (ui.shortcutsBtn) ui.shortcutsBtn.classList.add('hidden');
     if (ui.pauseOverlay) ui.pauseOverlay.classList.add('hidden');
 }
 
@@ -802,6 +825,7 @@ function startGame() {
     ui.muteBtn.classList.remove('hidden');
     ui.nextMusicBtn.classList.remove('hidden');
     ui.pauseBtn.classList.remove('hidden');
+    ui.shortcutsBtn.classList.remove('hidden');
 
     playGameMusic();
 
@@ -831,6 +855,7 @@ function resetGame() {
     ui.muteBtn.classList.remove('hidden');
     ui.nextMusicBtn.classList.remove('hidden');
     ui.pauseBtn.classList.remove('hidden');
+    ui.shortcutsBtn.classList.remove('hidden');
     ui.pauseBtn.textContent = '⏸';
     ui.pauseBtn.title = 'Pause Game';
     
@@ -965,6 +990,7 @@ function draw() {
     dino.draw();
 }
 
+
 function gameLoop(currentTime) {
     if (!gameRunning) return;
     
@@ -1003,6 +1029,7 @@ async function gameOver() {
     ui.muteBtn.classList.add('hidden');
     ui.nextMusicBtn.classList.add('hidden');
     ui.pauseBtn.classList.add('hidden');
+    ui.shortcutsBtn.classList.add('hidden');
 
     if (currentUser && finalScore > currentUser.highScore) {
         currentUser.highScore = finalScore;

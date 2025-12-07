@@ -124,6 +124,106 @@ canvas {
     box-shadow: 0 2px 10px rgba(255, 107, 53, 0.3);
 }
 
+/* Shortcuts Button and Tooltip */
+.shortcuts-button-wrapper {
+    position: relative;
+}
+
+.shortcuts-tooltip {
+    position: absolute;
+    top: 70px;
+    right: 0;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.95) 0%, rgba(56, 142, 60, 0.95) 100%);
+    border-radius: 15px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px) scale(0.95);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+    z-index: 100;
+    min-width: 200px;
+    white-space: nowrap;
+}
+
+.shortcuts-button-wrapper:hover .shortcuts-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.tooltip-arrow {
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid rgba(76, 175, 80, 0.95);
+}
+
+.tooltip-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tooltip-title {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 8px;
+}
+
+.tooltip-shortcuts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tooltip-shortcut {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.2s ease;
+}
+
+.tooltip-shortcut:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateX(3px);
+}
+
+.tooltip-key {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #FFC107;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: 2px;
+    min-width: 30px;
+    text-align: center;
+}
+
+.tooltip-label {
+    font-size: 0.9rem;
+    color: white;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
 /* Legacy pause-button class for backward compatibility */
 .pause-button {
     position: absolute;
@@ -867,5 +967,77 @@ input[type="checkbox"] {
         margin-bottom: 1.5rem;
         font-size: 1.1rem;
         padding: 12px;
+    }
+}
+
+/* Keyboard Shortcuts Info Section */
+#shortcuts-info {
+    width: 100%;
+    background: linear-gradient(90deg, #FF4C4C 0%, #E63946 100%);
+    padding: 18px 20px;
+    text-align: center;
+    font-size: 0.95rem;
+    color: white;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.shortcuts-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.95rem;
+    color: white;
+}
+
+.shortcut-item strong {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 1px;
+    min-width: 28px;
+    text-align: center;
+}
+
+.shortcut-separator {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.2rem;
+}
+
+/* Mobile responsive */
+@media screen and (max-width: 600px) {
+    #shortcuts-info {
+        padding: 14px 15px;
+        font-size: 0.85rem;
+    }
+
+    .shortcuts-content {
+        gap: 12px;
+    }
+
+    .shortcut-item {
+        font-size: 0.85rem;
+    }
+
+    .shortcut-item strong {
+        padding: 3px 8px;
+        font-size: 0.95rem;
+    }
+
+    .shortcut-separator {
+        font-size: 1rem;
     }
 }

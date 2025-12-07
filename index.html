@@ -34,6 +34,29 @@
                 <button id="mute-btn" class="control-button hidden" title="Mute Music">🔊</button>
                 <button id="next-music-btn" class="control-button hidden" title="Next Music">⏭️</button>
                 <button id="pause-btn" class="control-button hidden" title="Pause Game">⏸</button>
+                <div class="shortcuts-button-wrapper">
+                    <button id="shortcuts-btn" class="control-button hidden" title="Keyboard Shortcuts">⌨️</button>
+                    <div class="shortcuts-tooltip">
+                        <div class="tooltip-arrow"></div>
+                        <div class="tooltip-content">
+                            <div class="tooltip-title">⌨️ Keyboard Shortcuts</div>
+                            <div class="tooltip-shortcuts">
+                                <div class="tooltip-shortcut">
+                                    <span class="tooltip-key">M</span>
+                                    <span class="tooltip-label">Mute/Unmute</span>
+                                </div>
+                                <div class="tooltip-shortcut">
+                                    <span class="tooltip-key">P</span>
+                                    <span class="tooltip-label">Pause/Resume</span>
+                                </div>
+                                <div class="tooltip-shortcut">
+                                    <span class="tooltip-key">N</span>
+                                    <span class="tooltip-label">Next Music</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div id="score-board" class="hidden">
@@ -154,6 +177,23 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Keyboard Shortcuts Info Section -->
+        <div id="shortcuts-info" class="shortcuts-info">
+            <div class="shortcuts-content">
+                <span class="shortcut-item">
+                    <strong>M</strong> - Mute/Unmute
+                </span>
+                <span class="shortcut-separator">|</span>
+                <span class="shortcut-item">
+                    <strong>P</strong> - Pause/Resume
+                </span>
+                <span class="shortcut-separator">|</span>
+                <span class="shortcut-item">
+                    <strong>N</strong> - Next Music
+                </span>
             </div>
         </div>
 
